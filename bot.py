@@ -22,6 +22,7 @@ from telegram.ext import (
 import classifier
 import database
 import state
+from health_server import start_health_server
 from sections import SECCION_COLORES
 
 logging.basicConfig(
@@ -230,6 +231,7 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_lista))
     app.add_handler(CallbackQueryHandler(handle_toggle, pattern="^toggle:"))
 
+    start_health_server()
     asyncio.set_event_loop(asyncio.new_event_loop())
     logger.info("Bot arrancado. Esperando mensajes...")
     app.run_polling()
