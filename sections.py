@@ -1,0 +1,16 @@
+SECCIONES = [
+    "🥬 Frutas y verduras",
+    "🥩 Carnicería y charcutería",
+    "🐟 Pescadería",
+    "🥛 Lácteos y huevos",
+    "🧀 Refrigerados",
+    "🥖 Panadería",
+    "🥫 Conservas y enlatados",
+    "🍝 Pasta, arroz y legumbres",
+    "🧴 Limpieza y hogar",
+    "🛁 Higiene personal",
+    "🍷 Bebidas",
+    "🧊 Congelados",
+    "🍬 Dulces y snacks",
+    "🛒 Otros",
+]
