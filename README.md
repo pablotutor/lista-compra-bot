@@ -59,10 +59,3 @@ python bot.py
 TELEGRAM_TOKEN=tu_token_de_botfather
 OLLAMA_API_KEY=tu_api_key_de_ollama
 ```
-
-## Deploy en Railway
-
-1. Sube el repo a GitHub
-2. Conecta el repo en [railway.app](https://railway.app)
-3. Añade las variables de entorno en Railway → Variables
-4. Railway detecta `railway.json` y arranca automáticamente
