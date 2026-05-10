@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import uuid
@@ -229,6 +230,7 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_lista))
     app.add_handler(CallbackQueryHandler(handle_toggle, pattern="^toggle:"))
 
+    asyncio.set_event_loop(asyncio.new_event_loop())
     logger.info("Bot arrancado. Esperando mensajes...")
     app.run_polling()
 
