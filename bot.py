@@ -21,6 +21,7 @@ from telegram.ext import (
 import classifier
 import database
 import state
+from sections import SECCION_COLORES
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -46,18 +47,14 @@ def escape_md(text: str) -> str:
 
 def render_seccion(nombre_seccion: str, items: dict) -> str:
     todos_comprados = all(i["comprado"] for i in items.values())
-    titulo = f"~{escape_md(nombre_seccion)}~" if todos_comprados else escape_md(nombre_seccion)
-    lineas = [titulo, ""]
-    for item in items.values():
-        nombre = escape_md(item["nombre"])
-        lineas.append(f"• ~{nombre}~" if item["comprado"] else f"• {nombre}")
-    return "\n".join(lineas)
+    titulo = escape_md(nombre_seccion)
+    return f"~{titulo}~" if todos_comprados else titulo
 
 
-def build_keyboard(items: dict) -> InlineKeyboardMarkup:
+def build_keyboard(items: dict, color: str) -> InlineKeyboardMarkup:
     buttons = []
     for item_id, item in items.items():
-        label = f"↩ {item['nombre']}" if item["comprado"] else f"✓ {item['nombre']}"
+        label = f"✅ {item['nombre']}" if item["comprado"] else f"{color} {item['nombre']}"
         buttons.append([InlineKeyboardButton(label, callback_data=f"toggle:{item_id}")])
     return InlineKeyboardMarkup(buttons)
 
@@ -140,8 +137,9 @@ async def handle_lista(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await processing_msg.delete()
 
     for nombre_seccion, sec_data in session_state["secciones"].items():
+        color = SECCION_COLORES.get(nombre_seccion, "⬛")
         texto = render_seccion(nombre_seccion, sec_data["items"])
-        keyboard = build_keyboard(sec_data["items"])
+        keyboard = build_keyboard(sec_data["items"], color)
         msg = await update.message.reply_text(
             texto,
             parse_mode=ParseMode.MARKDOWN_V2,
@@ -185,8 +183,9 @@ async def handle_toggle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await database.mark_item_comprado(item_id, item["comprado"], timestamp)
 
     # Redibujar mensaje de la sección
+    color = SECCION_COLORES.get(seccion_encontrada, "⬛")
     texto = render_seccion(seccion_encontrada, sec_data["items"])
-    keyboard = build_keyboard(sec_data["items"])
+    keyboard = build_keyboard(sec_data["items"], color)
     await context.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=sec_data["message_id"],
@@ -194,6 +193,25 @@ async def handle_toggle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=keyboard,
     )
+
+
+async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    session = state.user_sessions.pop(user_id, None)
+
+    if session is None:
+        await update.message.reply_text("No tienes ninguna lista activa.")
+        return
+
+    for sec_data in session["secciones"].values():
+        msg_id = sec_data.get("message_id")
+        if msg_id:
+            try:
+                await context.bot.delete_message(update.effective_chat.id, msg_id)
+            except Exception:
+                pass
+
+    await update.message.reply_text("Lista borrada ✓ Mándame la nueva cuando quieras.")
 
 
 async def post_init(application) -> None:
@@ -207,6 +225,7 @@ def main() -> None:
 
     app = ApplicationBuilder().token(token).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("reset", reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_lista))
     app.add_handler(CallbackQueryHandler(handle_toggle, pattern="^toggle:"))
 
