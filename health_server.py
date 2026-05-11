@@ -28,6 +28,9 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b'{"status":"sleeping"}')
 
+    def do_HEAD(self):
+        self.do_GET()
+
     def log_message(self, *args):
         pass  # silenciar logs de cada ping de UptimeRobot
 
